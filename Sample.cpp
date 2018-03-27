@@ -66,7 +66,7 @@ void SampleListener::onFrame(const Controller& controller) {
   }
   else
   {
-		std::ofstream outputFile("data/" + std::to_string(gesture_counter) + "_" + std::to_string(frame_counter) + ".data");
+	std::ofstream outputFile("data/" + std::to_string(gesture_counter) + "_" + std::to_string(frame_counter) + ".data");
 	const std::string serializedFrame = frame.serialize();
         Frame reconstructedFrame;
         reconstructedFrame.deserialize(serializedFrame);
