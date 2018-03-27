@@ -67,11 +67,25 @@ void SampleListener::onFrame(const Controller& controller) {
   else
   {
 		std::ofstream outputFile("data/" + std::to_string(gesture_counter) + "_" + std::to_string(frame_counter) + ".data");
-		const std::string serializedFrame = frame.serialize();
-		outputFile << serializedFrame;
-		outputFile.close();
+	const std::string serializedFrame = frame.serialize();
+        Frame reconstructedFrame;
+        reconstructedFrame.deserialize(serializedFrame);
+        Hand leftHand = reconstructedFrame.hands().leftmost();
+        Hand rightHand = reconstructedFrame.hands().rightmost();
+        FingerList leftFingers = leftHand.fingers();
+        FingerList rightFingers = rightHand.fingers();
+        std::vector<Leap::Vector> leftPosition;
+        std::vector<Leap::Vector> rightPosition;
+        for (int i = 0; i<leftFingers.count();++i){
+            leftPosition.push_back(leftFingers[i].tipPosition());
+            rightPosition.push_back(rightFingers[i].tipPosition());
+        }
+        leftPosition.push_back(leftHand.palmPosition());
+        rightPosition.push_back(rightHand.palmPosition());	  
+	outputFile << serializedFrame;
+	outputFile.close();
 
-		this->frame_counter++;
+	this->frame_counter++;
   }
 
 }
