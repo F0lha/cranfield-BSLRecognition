@@ -19,9 +19,12 @@ void Recorder::onFrame(const Leap::Controller& controller) {
 	// Get the most recent frame and report some basic information
 	const Leap::Frame frame = controller.frame();
 
+	std::cout << frame.hands().isEmpty();
+
 	std::ofstream outputFile(gesture + "/" + std::to_string(frame_counter) + ".data");
 	const std::string serializedFrame = frame.serialize();
 
+	std::cout << "Size :" << serializedFrame.length() << std::endl;
 	outputFile << serializedFrame;
 	outputFile.close();
 

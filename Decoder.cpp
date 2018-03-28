@@ -41,19 +41,26 @@ cv::Mat Decoder::decode(std::string gesture) {
 
 			//std::cout << direct + "\\" + std::string(ent->d_name);
 
-			std::ifstream inputFile(direct + "\\" + std::string(ent->d_name));
+			std::ifstream inputFile(direct + "\\" + std::string(ent->d_name), std::ios::binary);
 
-			std::string frameData((std::istreambuf_iterator<char>(inputFile)), std::istreambuf_iterator<char>());
+			if (!inputFile)
+				std::cout << "Error";
+
+			std::string frameData((std::istreambuf_iterator<char>(inputFile)),
+				(std::istreambuf_iterator<char>()));
+
+			std::cout << "Size :" << frameData.length() << std::endl;
 
 			Leap::Frame reconstructedFrame;
 
 			reconstructedFrame.deserialize(frameData);
+
 			Leap::Hand leftHand = reconstructedFrame.hands().leftmost();
 			Leap::Hand rightHand = reconstructedFrame.hands().rightmost();
 			Leap::FingerList leftFingers = leftHand.fingers();
 			Leap::FingerList rightFingers = rightHand.fingers();
 
-			std::vector<float> atributes;
+			std::vector<float> atributes();
 
 			std::vector<float> leftPosition;
 			std::vector<float> rightPosition;
@@ -87,7 +94,9 @@ cv::Mat Decoder::decode(std::string gesture) {
 		for (int k = 0; k < toTranformInMat[i].size(); k++)
 		{
 			m.at<float>(i, k) = toTranformInMat[i][k];
+			std::cout << toTranformInMat[i][k] << ",";
 		}
+		std::cout << std::endl;
 	}
 
 	return m;

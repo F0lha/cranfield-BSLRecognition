@@ -24,6 +24,7 @@ public:
 	void train(Mat training_data, vector<int> label);
 
 	Mat predict(Mat test_data);
+
 };
 
 #endif

@@ -4,15 +4,24 @@ DeepLearningModel::DeepLearningModel(int features, int nclasses)
 {
 	this->nclasses = nclasses;
 
-	Mat layers = Mat(4,1, CV_32SC1);
+	Mat layers = Mat(5,1, CV_32SC1);
 	layers.at<int>(0, 0) = features;     // input
-	layers.at<int>(1, 0) = nclasses * 16;  // hidden
-	layers.at<int>(2, 0) = nclasses * 8;  // hidden
-	layers.at<int>(3, 0) = nclasses;      // output, 1 pin per class.
+	layers.at<int>(1, 0) = 512;  // hidden
+	layers.at<int>(2, 0) = 256;  // hidden
+	layers.at<int>(3, 0) = 256;  // hidden
+	layers.at<int>(4, 0) = nclasses;      // output, 1 pin per class.
 
 	this->ann = new CvANN_MLP();
 
-	this->params = new CvANN_MLP_TrainParams(cvTermCriteria(CV_TERMCRIT_ITER + CV_TERMCRIT_EPS, 1000, 0.01), CvANN_MLP_TrainParams::RPROP, 0.1, FLT_EPSILON);
+	this->params = new CvANN_MLP_TrainParams(cvTermCriteria(CV_TERMCRIT_ITER + CV_TERMCRIT_EPS, 1000, 0.000001),
+
+		// use backpropogation for training
+		CvANN_MLP_TrainParams::BACKPROP,
+
+		// co-efficents for backpropogation training
+		// (refer to manual)
+		0.1,
+		0.1);
 
 	ann->create(layers);
 }
