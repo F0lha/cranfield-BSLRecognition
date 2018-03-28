@@ -5,6 +5,7 @@
 
 #include <cv.h>		  // opencv include file
 #include <ml.h>		  // opencv machine learning include file
+#include <memory>
 
 #include "Model.h"
 
@@ -12,20 +13,16 @@ using namespace cv;
 
 class DeepLearningModel : public Model
 {
-	int nclasses;
-	CvANN_MLP_TrainParams* params;
-
+    int nclasses;
+    std::unique_ptr<CvANN_MLP_TrainParams> params;
 public:
-	DeepLearningModel();
+    DeepLearningModel();
 	DeepLearningModel(int features, int nclasses);
 	~DeepLearningModel();
 
 
 	void train(Mat training_data, vector<int> label);
-
 	Mat predict(Mat test_data);
-
-
 };
 
 #endif

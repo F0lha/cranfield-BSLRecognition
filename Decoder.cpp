@@ -36,8 +36,6 @@ cv::Mat Decoder::decode(std::string gesture) {
 				count++;
 				continue;
 			}
-			//needed for some reason
-			Leap::Controller controller;
 
 			//std::cout << direct + "\\" + std::string(ent->d_name);
 
@@ -48,7 +46,7 @@ cv::Mat Decoder::decode(std::string gesture) {
 
 			std::string value;
 
-			while (getline(inputFile, value, ',')) {
+ 			while (getline(inputFile, value, ',')) {
 				atributes.push_back(std::stof(value.c_str()));
 			}
 
