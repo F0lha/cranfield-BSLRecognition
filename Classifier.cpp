@@ -47,6 +47,9 @@ void Classifier::onFrame(const Leap::Controller& controller) {
 
 	cv::Mat predict = cv::Mat(1, atributes.size(), CV_32FC1);
 
+	for (int i = 0; i < atributes.size(); i++)
+		predict.at<float>(0, i) = atributes[i];
+
 	cv::Mat prediction = this->model->predict(predict);
 
 	double min, max;
