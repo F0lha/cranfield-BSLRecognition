@@ -1,5 +1,9 @@
 #include "DeepLearningModel.h"
 
+DeepLearningModel::DeepLearningModel() {
+	this->model = new CvANN_MLP();
+}
+
 DeepLearningModel::DeepLearningModel(int features, int nclasses)
 {
 	this->nclasses = nclasses;
@@ -11,7 +15,7 @@ DeepLearningModel::DeepLearningModel(int features, int nclasses)
 	layers.at<int>(3, 0) = 64;  // hidden
 	layers.at<int>(4, 0) = nclasses;      // output, 1 pin per class.
 
-	this->ann = new CvANN_MLP();
+	this->model = new CvANN_MLP();
 
 	this->params = new CvANN_MLP_TrainParams(cvTermCriteria(CV_TERMCRIT_ITER + CV_TERMCRIT_EPS, 5000, 0.000001),
 
@@ -23,7 +27,7 @@ DeepLearningModel::DeepLearningModel(int features, int nclasses)
 		0.1,
 		0.1);
 
-	ann->create(layers);
+	((CvANN_MLP *)this->model)->create(layers);
 }
 
 void DeepLearningModel::train(Mat training_data, vector<int> label) {
@@ -35,7 +39,7 @@ void DeepLearningModel::train(Mat training_data, vector<int> label) {
 		train_classes.at<float>(i, label.at(i)) = 1.f;
 	}
 
-	ann->train(training_data, train_classes, Mat(), Mat(), (*params), 0);
+	((CvANN_MLP *)this->model)->train(training_data, train_classes, Mat(), Mat(), (*params), 0);
 }
 
 
@@ -43,7 +47,7 @@ Mat DeepLearningModel::predict(Mat test_data) {
 
 	Mat predictions = Mat();
 
-	ann->predict(test_data, predictions);
+	((CvANN_MLP *)this->model)->predict(test_data, predictions);
 
 	return predictions;
 }
@@ -51,3 +55,4 @@ Mat DeepLearningModel::predict(Mat test_data) {
 DeepLearningModel::~DeepLearningModel()
 {
 }
+
