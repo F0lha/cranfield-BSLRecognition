@@ -1,21 +1,19 @@
-#include "Recorder.h"
+#include "Classifier.h"
 
 
 
-Recorder::Recorder()
+Classifier::Classifier(Model* model)
 {
+	this->model = model;
 }
 
 
-Recorder::~Recorder()
+Classifier::~Classifier()
 {
 }
 
-void Recorder::onFrame(const Leap::Controller& controller) {
-	// Get the most recent frame and report some basic information
+void Classifier::onFrame(const Leap::Controller& controller) {
 	const Leap::Frame frame = controller.frame();
-
-	std::ofstream outputFile(gesture + "/" + std::to_string(frame_counter) + ".data");
 
 	std::vector<float> atributes(2 * (5 + 1) * 3, -1.f);
 
@@ -47,19 +45,13 @@ void Recorder::onFrame(const Leap::Controller& controller) {
 
 	}
 
-	std::string framestring = "";
+	cv::Mat predict = cv::Mat(1, atributes.size(), CV_32FC1);
 
-	for (int i = 0; i < atributes.size(); i++)
-	{
-		framestring += std::to_string(atributes[i]) + ",";
-	}
-	
-	outputFile << framestring;
-	outputFile.close();
+	cv::Mat prediction = this->model->predict(predict);
 
-	this->frame_counter++;
-}
+	double min, max;
 
-void Recorder::setGesture(std::string gesture) {
-	this->gesture = gesture;
+	cv::Point min_loc, max_loc;
+	cv::minMaxLoc(prediction.row(0), &min, &max, &min_loc, &max_loc);
+	std::cout << "Label: " <<  std::to_string(max_loc.x) << std::endl;
 }
