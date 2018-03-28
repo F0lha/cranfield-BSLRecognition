@@ -18,22 +18,36 @@ cv::Mat Decoder::decode(std::string gesture) {
 	std::vector<std::vector<float>> toTranformInMat;
 
 	DIR *dir;
+	
 	struct dirent *ent;
-	if ((dir = opendir("house/")) != NULL) {
+
+	char buf[256];
+	GetCurrentDirectoryA(256, buf);
+	std::string direct = std::string(buf) + "\\" + gesture;
+
+	int count = 0;
+
+
+	if ((dir = opendir(direct.c_str())) != NULL) {
 		/* print all the files and directories within directory */
 		while ((ent = readdir(dir)) != NULL) {
-			printf("%s\n", ent->d_name);
 
-			std::cout << "name: " + std::string(ent->d_name) << std::endl;
+			if (count < 2) {
+				count++;
+				continue;
+			}
+			//needed for some reason
+			Leap::Controller controller;
 
-			std::ifstream inputFile("house/" + std::string(ent->d_name));
+			//std::cout << direct + "\\" + std::string(ent->d_name);
 
-			std::string serializedString;
-			inputFile >> serializedString;
+			std::ifstream inputFile(direct + "\\" + std::string(ent->d_name));
+
+			std::string frameData((std::istreambuf_iterator<char>(inputFile)), std::istreambuf_iterator<char>());
 
 			Leap::Frame reconstructedFrame;
 
-			reconstructedFrame.deserialize(serializedString);
+			reconstructedFrame.deserialize(frameData);
 			Leap::Hand leftHand = reconstructedFrame.hands().leftmost();
 			Leap::Hand rightHand = reconstructedFrame.hands().rightmost();
 			Leap::FingerList leftFingers = leftHand.fingers();
@@ -66,11 +80,14 @@ cv::Mat Decoder::decode(std::string gesture) {
 		closedir(dir);
 	}
 
-	cv::Mat m;
+	cv::Mat m(toTranformInMat.size(), toTranformInMat.at(0).size(), CV_32FC1);
 
 	for (int i = 0; i < toTranformInMat.size(); i++)
 	{
-		//memcpy(m.data, toTranformInMat[i].data(), toTranformInMat[i].size() * sizeof(int));
+		for (int k = 0; k < toTranformInMat[i].size(); k++)
+		{
+			m.at<float>(i, k) = toTranformInMat[i][k];
+		}
 	}
 
 	return m;
