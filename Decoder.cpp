@@ -41,46 +41,16 @@ cv::Mat Decoder::decode(std::string gesture) {
 
 			//std::cout << direct + "\\" + std::string(ent->d_name);
 
-			std::ifstream inputFile(direct + "\\" + std::string(ent->d_name), std::ios::binary);
+			std::ifstream inputFile(direct + "\\" + std::string(ent->d_name));
 
-			if (!inputFile)
-				std::cout << "Error";
 
-			std::string frameData((std::istreambuf_iterator<char>(inputFile)),
-				(std::istreambuf_iterator<char>()));
+			std::vector<float> atributes;
 
-			std::cout << "Size :" << frameData.length() << std::endl;
+			std::string value;
 
-			Leap::Frame reconstructedFrame;
-
-			reconstructedFrame.deserialize(frameData);
-
-			Leap::Hand leftHand = reconstructedFrame.hands().leftmost();
-			Leap::Hand rightHand = reconstructedFrame.hands().rightmost();
-			Leap::FingerList leftFingers = leftHand.fingers();
-			Leap::FingerList rightFingers = rightHand.fingers();
-
-			std::vector<float> atributes();
-
-			std::vector<float> leftPosition;
-			std::vector<float> rightPosition;
-			for (int i = 0; i<leftFingers.count(); ++i) {
-				leftPosition.push_back(leftFingers[i].tipPosition().x);
-				leftPosition.push_back(leftFingers[i].tipPosition().y);
-				leftPosition.push_back(leftFingers[i].tipPosition().z);
-				rightPosition.push_back(rightFingers[i].tipPosition().x);
-				rightPosition.push_back(rightFingers[i].tipPosition().y);
-				rightPosition.push_back(rightFingers[i].tipPosition().z);
+			while (getline(inputFile, value, ',')) {
+				atributes.push_back(std::stof(value.c_str()));
 			}
-			leftPosition.push_back(leftHand.palmPosition().x);
-			leftPosition.push_back(leftHand.palmPosition().y);
-			leftPosition.push_back(leftHand.palmPosition().z);
-			rightPosition.push_back(rightHand.palmPosition().x);
-			rightPosition.push_back(rightHand.palmPosition().y);
-			rightPosition.push_back(rightHand.palmPosition().z);
-
-			atributes.insert(atributes.end(), leftPosition.begin(), leftPosition.end());
-			atributes.insert(atributes.end(), rightPosition.begin(), rightPosition.end());
 
 			toTranformInMat.push_back(atributes);
 		}
@@ -94,9 +64,9 @@ cv::Mat Decoder::decode(std::string gesture) {
 		for (int k = 0; k < toTranformInMat[i].size(); k++)
 		{
 			m.at<float>(i, k) = toTranformInMat[i][k];
-			std::cout << toTranformInMat[i][k] << ",";
+			//std::cout << toTranformInMat[i][k] << ",";
 		}
-		std::cout << std::endl;
+		//std::cout << std::endl;
 	}
 
 	return m;
