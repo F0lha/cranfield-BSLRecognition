@@ -23,7 +23,7 @@ cv::Mat Decoder::decode(std::string gesture) {
 
 	char buf[256];
 	GetCurrentDirectoryA(256, buf);
-	std::string direct = std::string(buf) + "\\" + gesture;
+	std::string direct = std::string(buf) + "\\dataset\\" + gesture;
 
 	int count = 0;
 
@@ -37,10 +37,9 @@ cv::Mat Decoder::decode(std::string gesture) {
 				continue;
 			}
 
-			//std::cout << direct + "\\" + std::string(ent->d_name);
-
 			std::ifstream inputFile(direct + "\\" + std::string(ent->d_name));
 
+			//std::cerr << "name:" << direct +"\\"+ std::string(ent->d_name) << std::endl;
 
 			std::vector<float> atributes;
 

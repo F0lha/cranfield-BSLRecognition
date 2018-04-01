@@ -5,6 +5,7 @@
 Classifier::Classifier(Model* model)
 {
 	this->model = model;
+	this->counter = 0;
 }
 
 
@@ -13,6 +14,13 @@ Classifier::~Classifier()
 }
 
 void Classifier::onFrame(const Leap::Controller& controller) {
+
+	if (this->counter < 5){
+		this->counter++;
+		return;
+	}
+	this->counter = 0;
+
 	const Leap::Frame frame = controller.frame();
 
 	std::vector<float> atributes(2 * (5 + 1) * 3, -1.f);
