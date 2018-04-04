@@ -1,4 +1,7 @@
 #include "Decoder.h"
+#ifdef __APPLE__
+#include <zconf.h>
+#endif
 
 
 
@@ -22,8 +25,14 @@ cv::Mat Decoder::decode(std::string gesture) {
 	struct dirent *ent;
 
 	char buf[256];
+
+#ifdef _WIN32
 	GetCurrentDirectoryA(256, buf);
-	std::string direct = std::string(buf) + "\\dataset\\" + gesture;
+    std::string direct = std::string(buf) + "\\dataset\\" + gesture;
+#elif defined __APPLE__
+	getcwd(buf, 256);
+	std::string direct = std::string(buf) + "/" + gesture;
+#endif
 
 	int count = 0;
 
@@ -37,7 +46,11 @@ cv::Mat Decoder::decode(std::string gesture) {
 				continue;
 			}
 
+#ifdef _WIN32
 			std::ifstream inputFile(direct + "\\" + std::string(ent->d_name));
+#elif defined __APPLE__
+			std::ifstream inputFile(direct + "/" + std::string(ent->d_name));
+#endif
 
 			//std::cerr << "name:" << direct +"\\"+ std::string(ent->d_name) << std::endl;
 
