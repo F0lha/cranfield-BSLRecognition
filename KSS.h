@@ -5,28 +5,26 @@ template<typename T>
 class KSS {
     size_t tp_, tn_, fp_, fn_;
     const T yes_;
-    const T no_;
 
 public:
-    KSS(const T yes, const T no) :
+    KSS(const T yes) :
         tp_{},
         tn_{},
         fp_{},
         fn_{},
-        yes_{ yes },
-        no_{ no } {
+        yes_{ yes } {
     }
     void operator ()(T predicted, T actual) {
         if (predicted == yes_ && actual == yes_) {
             ++tp_;
         }
-        else if (predicted == no_ && actual == no_) {
+        else if (predicted != yes_ && actual != yes_) {
             ++tn_;
         }
-        else if (predicted == yes_ && actual == no_) {
+        else if (predicted == yes_ && actual != yes_) {
             ++fp_;
         }
-        else if (predicted == no_ && actual == yes_) {
+        else if (predicted != yes_ && actual == yes_) {
             ++fn_;
         }
     }

@@ -1,70 +1,45 @@
 #include "Decoder.h"
-
-
+#include <filesystem>
+#include <sstream>
 
 Decoder::Decoder()
-{
-}
-
+{}
 
 Decoder::~Decoder()
-{
-}
-
-
+{}
 
 cv::Mat Decoder::decode(std::string gesture) {
+    namespace fs = std::experimental::filesystem;
+    std::vector<std::vector<float>> features;
+    for (const auto& p : fs::directory_iterator(gesture)) {
+        if (fs::is_regular_file(p.path())) {
+            std::ifstream file(p.path());
+            std::vector<float> attributes;
+            std::string l;
+            while (std::getline(file, l)) {
+                std::stringstream ss;
+                ss << l;
+                while(ss) {
+                    float v{};
+                    char  c{};
+                    ss >> v >> c;
+                    if(ss.good())
+                        attributes.push_back(v);
+                }
+            }
+            features.push_back(attributes);
+        }
+    }
 
-	std::vector<std::vector<float>> toTranformInMat;
+    if (features.empty())
+        return cv::Mat();
 
-	DIR *dir;
-	
-	struct dirent *ent;
+    cv::Mat m(features.size(), features[0].size(), CV_32FC1);
+    for (int i = 0; i < static_cast<int>(features.size()); ++i) {
+        for (int j = 0; j < static_cast<int>(features[i].size()); ++j) {
+            m.at<float>(i, j) = features[i][j];
+        }
+    }
 
-	char buf[256];
-	GetCurrentDirectoryA(256, buf);
-	std::string direct = std::string(buf) + "\\dataset\\" + gesture;
-
-	int count = 0;
-
-
-	if ((dir = opendir(direct.c_str())) != NULL) {
-		/* print all the files and directories within directory */
-		while ((ent = readdir(dir)) != NULL) {
-
-			if (count < 2) {
-				count++;
-				continue;
-			}
-
-			std::ifstream inputFile(direct + "\\" + std::string(ent->d_name));
-
-			//std::cerr << "name:" << direct +"\\"+ std::string(ent->d_name) << std::endl;
-
-			std::vector<float> atributes;
-
-			std::string value;
-
- 			while (getline(inputFile, value, ',')) {
-				atributes.push_back(std::stof(value.c_str()));
-			}
-
-			toTranformInMat.push_back(atributes);
-		}
-		closedir(dir);
-	}
-
-	cv::Mat m(toTranformInMat.size(), toTranformInMat.at(0).size(), CV_32FC1);
-
-	for (int i = 0; i < toTranformInMat.size(); i++)
-	{
-		for (int k = 0; k < toTranformInMat[i].size(); k++)
-		{
-			m.at<float>(i, k) = toTranformInMat[i][k];
-			//std::cout << toTranformInMat[i][k] << ",";
-		}
-		//std::cout << std::endl;
-	}
-
-	return m;
+    return m;
 }

@@ -18,8 +18,7 @@ class DeepLearningModel : public Model
 public:
     DeepLearningModel();
 	DeepLearningModel(int features, int nclasses);
-	~DeepLearningModel();
-
+    ~DeepLearningModel();
 
 	void train(Mat training_data, vector<int> label);
 	Mat predict(Mat test_data);
