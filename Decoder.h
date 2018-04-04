@@ -8,7 +8,11 @@
 #include <cv.h>       // opencv general include file
 #include <fstream>
 #include "Leap.h"
+#ifdef _WIN32
 #include "dirent.h"
+#elif defined __APPLE__
+#include <dirent.h>
+#endif
 
 class Decoder
 {
