@@ -3,6 +3,7 @@
 #include "Recorder.h"
 #include "Classifier.h"
 #include "DeepLearningModel.h"
+#include "SVMModel.h"
 #include "KSS.h"
 #ifdef __APPLE__
 #include <zconf.h>
@@ -61,7 +62,7 @@ void recorder(std::string signDir) {
     controller.removeListener(recorder);
 }
 
-void training(std::string modelFileName) {
+void training(std::string modelFileName, std::string modelType) {
     DIR *dir;
 
     struct dirent *ent;
@@ -103,18 +104,22 @@ void training(std::string modelFileName) {
 
     std::pair< Mat, vector<int>> pair = generateData(signs, signs_name.size());
 
+    Model* model;
 
-    DeepLearningModel model(signs[0].cols, signs_name.size());
+    if (modelType == "deep")
+        model = new DeepLearningModel(signs[0].cols, signs_name.size());
+    else
+        model = new SVMModel();
 
     std::cout << "Training Model" << std::endl;
 
-    model.train(pair.first, pair.second);
+    model->train(pair.first, pair.second);
 
     std::cout << "Saving Model" << std::endl;
-    model.save(modelFileName);
+    model->save(modelFileName);
 }
 
-void testing(std::string modelFileName) {
+void testing(std::string modelFileName, std::string modelType) {
     DIR *dir;
 
     struct dirent *ent;
@@ -156,29 +161,47 @@ void testing(std::string modelFileName) {
 
     std::pair< Mat, vector<int>> pair = generateData(signs, signs_name.size());
 
-    DeepLearningModel model;
-    model.load(modelFileName);
+    Model* model;
 
-    Mat prediction = model.predict(pair.first);
+    if (modelType == "deep")
+        model = new DeepLearningModel(signs[0].cols, signs_name.size());
+    else
+        model = new SVMModel();
+    model->load(modelFileName);
+
+    Mat prediction = model->predict(pair.first);
     KSS<float> kss(1, 0);
     for (int i = 0; i < prediction.rows; i++) {
-        double min, max;
-        cv::Point min_loc, max_loc;
-        cv::minMaxLoc(prediction.row(i), &min, &max, &min_loc, &max_loc);
+        if (modelType == "deep") {
+            double min, max;
+            cv::Point min_loc, max_loc;
+            cv::minMaxLoc(prediction.row(i), &min, &max, &min_loc, &max_loc);
 
-        std::cout << "Correct Label :" + std::to_string(pair.second[i]) + " and predicted is " + std::to_string(max_loc.x) << std::endl;
-        kss((float)max_loc.x, (float)pair.second[i]);
+            std::cout << "Correct Label :" + std::to_string(pair.second[i]) + " and predicted is " + std::to_string(max_loc.x) << std::endl;
+            kss((float)max_loc.x, (float)pair.second[i]);
+        }
+        else
+        {
+            std::cout << "Correct Label :" + std::to_string(pair.second[i]) + " and predicted is " << prediction.at<int>(i,0) << std::endl;
+            kss(prediction.at<int>(i, 0), (int)pair.second[i]);
+        }
+
     }
 
     std::cout << kss << std::endl;
 }
 
-void classifier(std::string modelFileName) {
-    DeepLearningModel model;
-    model.load(modelFileName);
+void classifier(std::string modelFileName, std::string modelType) {
+    Model* model;
+
+    if (modelType == "deep")
+        model = new DeepLearningModel();
+    else
+        model = new SVMModel();
+    model->load(modelFileName);
 
     Leap::Controller controller;
-    Classifier classifier = Classifier(&model);
+    Classifier classifier = Classifier(model);
     controller.addListener(classifier);
 #ifdef _WIN32
     Sleep(60000);
@@ -186,16 +209,19 @@ void classifier(std::string modelFileName) {
     controller.removeListener(classifier);
 }
 
+
+//argv2 is the name of the xml file containing the model
+//argv3 is the type of model deep/svm
 int main(int argc, char** argv) {
     if (argv[1] == std::string("recorder"))
         recorder(argv[2]);
     if (argv[1] == std::string("training")) {
-        training(argv[2]);
+        training(argv[2], argv[3]);
     }
     if (argv[1] == std::string("classifier"))
-        classifier(argv[2]);
+        classifier(argv[2], argv[3]);
     if (argv[1] == std::string("testing")) {
-        testing(argv[2]);
+        testing(argv[2], argv[3]);
     }
 //    string arg1, arg2, arg3;
 //    arg1 = "training/house";
