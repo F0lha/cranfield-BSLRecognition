@@ -223,17 +223,7 @@ int main(int argc, char** argv) {
     if (argv[1] == std::string("testing")) {
         testing(argv[2], argv[3]);
     }
-//    string arg1, arg2, arg3;
-//    arg1 = "training/house";
-//    arg2 = "training/data";
-//    arg3 = "training/house2";
-//    training(arg1, arg2, arg3);
-//    arg1 = "testing/house";
-//    arg2 = "testing/data";
-//    arg3 = "training/house2.xml";
-//    testing(arg1, arg2, arg3);
-
-
+    
 #ifdef _WIN32
     system("pause");
 #endif
