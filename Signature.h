@@ -87,66 +87,28 @@ inline std::vector<float> signatureStatic(const Leap::HandList& hands) {
     return attributes;
 }
 
-inline std::vector<float> signatureDynamic(const Leap::HandList& hands) {
-    //for each hand
-
-
+inline std::vector<float> signatureDynamic(const std::vector<Leap::Frame> frames) {
     using sf = std::vector<float>;
-    using sv = std::vector<Leap::Vector>;
-
     const float invalidValue = 1E6;
-
-    sf attributes(3 * (5 + 10), invalidValue);
-    if (hands.count() > 2)
-        return attributes;
-
-    std::array<sv, 2> fingerPos;
-    float             max{};
-    for (const auto& hand : hands) {
-        auto handPose = hand.palmPosition();
-        auto handSpeed = hand.palmVelocity();
-        //for each finger
-        auto hIndex = hand.isRight() ? 0 : 1;
-        for (const auto& finger : hand.fingers()) {
-            //update type of finger
-            auto type = finger.type();
-            fingerPos[hIndex].push_back(finger.tipPosition());
-            auto fh = fingerPos[hIndex].back() - handPose;
-            attributes[hIndex * 5 * 3 + type * 3 + 0] = fh.x;
-            attributes[hIndex * 5 * 3 + type * 3 + 1] = fh.y;
-            attributes[hIndex * 5 * 3 + type * 3 + 2] = fh.z;
-            auto mag = fh.magnitude();
-            if (max < mag) {
-                max = mag;
-            }
+    int i = 0;
+    sf attributes(10*9*2, invalidValue);
+    for (auto frame : frames) {
+        for (auto hand : frame.hands()) {
+            auto hIndex = hand.isRight() ? 0 : 1;
+            auto direction = (hand.palmVelocity())/(hand.palmVelocity().magnitude());
+            auto normal = hand.palmNormal();
+            auto plane = hand.direction();
+            attributes[hIndex * 90 + 0 + i * 9] = direction.x;
+            attributes[hIndex * 90 + 1 + i * 9] = direction.y;
+            attributes[hIndex * 90 + 2 + i * 9] = direction.z;
+            attributes[hIndex * 90 + 3 + i * 9] = normal.x;
+            attributes[hIndex * 90 + 4 + i * 9] = normal.y;
+            attributes[hIndex * 90 + 5 + i * 9] = normal.z;
+            attributes[hIndex * 90 + 6 + i * 9] = plane.x;
+            attributes[hIndex * 90 + 7 + i * 9] = plane.y;
+            attributes[hIndex * 90 + 8 + i * 9] = plane.z;
         }
+        ++i;
     }
-
-    if (hands.count() == 2) {
-        auto iter = attributes.begin() + 30;
-        float mag = 0.0;
-        for (size_t i = 0; i != 5; ++i) {
-            if ((!fingerPos[0].empty()) && (!fingerPos[1].empty())) {
-                auto fri = fingerPos[0][i];
-                auto fli = fingerPos[0][i];
-                auto frli = fri - fli;
-                *iter++ = frli[0];
-                *iter++ = frli[1];
-                *iter++ = frli[2];
-                mag = frli.magnitude();
-            }
-            if (max < mag) {
-                max = mag;
-            }
-        }
-    }
-
-    if (max > 0) {
-        for (auto& v : attributes) {
-            if (v != invalidValue)
-                v /= max;
-        }
-    }
-
     return attributes;
 }

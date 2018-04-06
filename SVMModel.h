@@ -10,7 +10,7 @@ public:
 	SVMModel();
 	~SVMModel();
 
-	void train(Mat training_data, vector<int> label);
-	Mat predict(Mat test_data);
+	void train(Mat training_data, vector<int> label) override;
+	std::vector<int> predict(Mat test_data) override;
 };
 

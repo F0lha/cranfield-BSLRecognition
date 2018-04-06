@@ -41,8 +41,16 @@ void DeepLearningModel::train(Mat training_data, vector<int> label) {
 }
 
 
-Mat DeepLearningModel::predict(Mat test_data) {
+std::vector<int> DeepLearningModel::predict(Mat test_data) {
 	Mat predictions = Mat();
     static_cast<CvANN_MLP*>(model.get())->predict(test_data, predictions);
-	return predictions;
+
+    std::vector<int> labels;
+    for (int i = 0; i < test_data.rows; i++) {
+        double min, max;
+        cv::Point min_loc, max_loc;
+        cv::minMaxLoc(predictions.row(i), &min, &max, &min_loc, &max_loc);
+        labels.push_back(max_loc.x);
+    }
+	return labels;
 }
