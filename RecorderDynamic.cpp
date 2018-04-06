@@ -39,7 +39,7 @@ void RecorderDynamic::setAttribute(std::string number) {
     for (int i = 0; i < frameMaxCount; ++i) {
         trainFrames.push_back(this->Frames[i*step]);
     }
-    auto attributes = signatureDynamic(trainFrames);
+    auto attributes = signatureDynamic(trainFrames, frameMaxCount);
     std::string framestring;
     for (const auto& v : attributes) {
         framestring += std::to_string(v) + ",";

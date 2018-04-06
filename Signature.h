@@ -87,26 +87,27 @@ inline std::vector<float> signatureStatic(const Leap::HandList& hands) {
     return attributes;
 }
 
-inline std::vector<float> signatureDynamic(const std::vector<Leap::Frame> frames) {
+inline std::vector<float> signatureDynamic(const std::vector<Leap::Frame> frames, const int frameMaxCount) {
     using sf = std::vector<float>;
     const float invalidValue = 1E6;
     int i = 0;
-    sf attributes(10*9*2, invalidValue);
+    const auto count = frameMaxCount * 9;
+    sf attributes(count*2, invalidValue);
     for (auto frame : frames) {
         for (auto hand : frame.hands()) {
             auto hIndex = hand.isRight() ? 0 : 1;
             auto direction = (hand.palmVelocity())/(hand.palmVelocity().magnitude());
             auto normal = hand.palmNormal();
             auto plane = hand.direction();
-            attributes[hIndex * 90 + 0 + i * 9] = direction.x;
-            attributes[hIndex * 90 + 1 + i * 9] = direction.y;
-            attributes[hIndex * 90 + 2 + i * 9] = direction.z;
-            attributes[hIndex * 90 + 3 + i * 9] = normal.x;
-            attributes[hIndex * 90 + 4 + i * 9] = normal.y;
-            attributes[hIndex * 90 + 5 + i * 9] = normal.z;
-            attributes[hIndex * 90 + 6 + i * 9] = plane.x;
-            attributes[hIndex * 90 + 7 + i * 9] = plane.y;
-            attributes[hIndex * 90 + 8 + i * 9] = plane.z;
+            attributes[hIndex * count + 0 + i * 9] = direction.x;
+            attributes[hIndex * count + 1 + i * 9] = direction.y;
+            attributes[hIndex * count + 2 + i * 9] = direction.z;
+            attributes[hIndex * count + 3 + i * 9] = normal.x;
+            attributes[hIndex * count + 4 + i * 9] = normal.y;
+            attributes[hIndex * count + 5 + i * 9] = normal.z;
+            attributes[hIndex * count + 6 + i * 9] = plane.x;
+            attributes[hIndex * count + 7 + i * 9] = plane.y;
+            attributes[hIndex * count + 8 + i * 9] = plane.z;
         }
         ++i;
     }
