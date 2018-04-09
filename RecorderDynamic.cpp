@@ -1,6 +1,9 @@
 #include <filesystem>
 #include "RecorderDynamic.h"
 #include "Signature.h"
+#include <core.hpp>
+
+
 
 namespace fs = std::experimental::filesystem;
 
@@ -21,28 +24,23 @@ void RecorderDynamic::onFrame(const Leap::Controller& controller) {
             mag = hand.palmVelocity().magnitude();
         }
     }
-    if (mag > 200) {
-        this->Frames.push_back(frame);
+    if (mag > 50) {
+        signatures.push_back(signatureDynamic(frame));
     }
 }
 
-void RecorderDynamic::setAttribute(std::string number) {
-    std::ofstream outputFile(gesture + "/"+ number + ".data");
-    int                      frameCount    = this->Frames.size();
-    const int                frameMaxCount = 50;
-    int                      step = frameCount / frameMaxCount;
-    std::vector<Leap::Frame> trainFrames;
-    if (Frames.empty()) {
-        std::cout << "no movement recorded" << std::endl;
+void RecorderDynamic::writeSignatures(std::string number) {
+    if (signatures.empty()) {
+        std::cout << "no signatures" << std::endl;
         return;
     }
-    for (int i = 0; i < frameMaxCount; ++i) {
-        trainFrames.push_back(this->Frames[i*step]);
-    }
-    auto attributes = signatureDynamic(trainFrames, frameMaxCount);
+    const auto pcaSignatures = pcaComputing(signatures);
+    std::ofstream outputFile(gesture + "/"+ number + ".data");
     std::string framestring;
-    for (const auto& v : attributes) {
-        framestring += std::to_string(v) + ",";
+    for (const auto& signature : pcaSignatures) {
+        for (const auto& v : signature) {
+            framestring += std::to_string(v) + ",";
+        }
     }
     outputFile << framestring;
     outputFile.close();

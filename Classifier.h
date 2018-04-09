@@ -3,14 +3,14 @@
 #include "Leap.h"
 #include <ml.h>
 
-#include "Model.h"
+#include "BaseClassifier.h"
 
-class Classifier : public Leap::Listener
+class Classifier : public BaseClassifier
 {
-	Model* model;
+    void doSignatures(const Leap::Frame& frame) override;
+
 public:
 	Classifier(Model* model);
 	~Classifier();
-	void onFrame(const Leap::Controller&);
 };
 

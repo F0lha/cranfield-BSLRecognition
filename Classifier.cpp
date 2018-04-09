@@ -2,9 +2,9 @@
 #include  "Signature.h"
 
 
-Classifier::Classifier(Model* model)
+Classifier::Classifier(Model* model): BaseClassifier(model)
 {
-	this->model = model;
+	
 }
 
 
@@ -12,9 +12,7 @@ Classifier::~Classifier()
 {
 }
 
-void Classifier::onFrame(const Leap::Controller& controller) {
-	const Leap::Frame frame = controller.frame();
-
+void Classifier::doSignatures(const Leap::Frame& frame) {
     auto attributes = signatureStatic(frame.hands());
 	cv::Mat predict = cv::Mat(1, attributes.size(), CV_32FC1, attributes.data());
 	auto labels = model->predict(predict);

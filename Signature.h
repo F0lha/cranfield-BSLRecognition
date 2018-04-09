@@ -2,6 +2,7 @@
 
 #include "Leap.h"
 #include <array>
+#include <core.hpp>
 
 //Compute signature for hands capture w/ leap motion detector.
 //these attributes are not invariant in space.
@@ -87,29 +88,81 @@ inline std::vector<float> signatureStatic(const Leap::HandList& hands) {
     return attributes;
 }
 
-inline std::vector<float> signatureDynamic(const std::vector<Leap::Frame> frames, const int frameMaxCount) {
+//inline std::vector<float> signatureDynamic(const std::vector<Leap::Frame> frames, const int frameMaxCount) {
+//    using sf = std::vector<float>;
+//    const float invalidValue = 1E6;
+//    int i = 0;
+//    const auto count = frameMaxCount * 9;
+//    sf attributes(count*2, invalidValue);
+//    for (auto frame : frames) {
+//        for (auto hand : frame.hands()) {
+//            auto hIndex = hand.isRight() ? 0 : 1;
+//            auto direction = (hand.palmVelocity())/(hand.palmVelocity().magnitude());
+//            auto normal = hand.palmNormal();
+//            auto plane = hand.direction();
+//            attributes[hIndex * count + 0 + i * 9] = direction.x;
+//            attributes[hIndex * count + 1 + i * 9] = direction.y;
+//            attributes[hIndex * count + 2 + i * 9] = direction.z;
+//            attributes[hIndex * count + 3 + i * 9] = normal.x;
+//            attributes[hIndex * count + 4 + i * 9] = normal.y;
+//            attributes[hIndex * count + 5 + i * 9] = normal.z;
+//            attributes[hIndex * count + 6 + i * 9] = plane.x;
+//            attributes[hIndex * count + 7 + i * 9] = plane.y;
+//            attributes[hIndex * count + 8 + i * 9] = plane.z;
+//        }
+//        ++i;
+//    }
+//    return attributes;
+//}
+
+inline std::vector<float> signatureDynamic(Leap::Frame frame) {
     using sf = std::vector<float>;
     const float invalidValue = 1E6;
     int i = 0;
-    const auto count = frameMaxCount * 9;
-    sf attributes(count*2, invalidValue);
-    for (auto frame : frames) {
-        for (auto hand : frame.hands()) {
-            auto hIndex = hand.isRight() ? 0 : 1;
-            auto direction = (hand.palmVelocity())/(hand.palmVelocity().magnitude());
-            auto normal = hand.palmNormal();
-            auto plane = hand.direction();
-            attributes[hIndex * count + 0 + i * 9] = direction.x;
-            attributes[hIndex * count + 1 + i * 9] = direction.y;
-            attributes[hIndex * count + 2 + i * 9] = direction.z;
-            attributes[hIndex * count + 3 + i * 9] = normal.x;
-            attributes[hIndex * count + 4 + i * 9] = normal.y;
-            attributes[hIndex * count + 5 + i * 9] = normal.z;
-            attributes[hIndex * count + 6 + i * 9] = plane.x;
-            attributes[hIndex * count + 7 + i * 9] = plane.y;
-            attributes[hIndex * count + 8 + i * 9] = plane.z;
-        }
-        ++i;
+    const auto count = 3;
+    sf attributes(6, invalidValue);
+    for (auto hand : frame.hands()) {
+        auto hIndex = hand.isRight() ? 0 : 1;
+        auto direction = (hand.palmVelocity()) / (hand.palmVelocity().magnitude());
+        auto normal = hand.palmNormal();
+        auto plane = hand.direction();
+        attributes[hIndex * count + 0] = direction.x;
+        attributes[hIndex * count + 1] = direction.y;
+        attributes[hIndex * count + 2] = direction.z;
+        //attributes[hIndex * count + 3] = normal.x;
+        //attributes[hIndex * count + 4] = normal.y;
+        //attributes[hIndex * count + 5] = normal.z;
+        //attributes[hIndex * count + 6] = plane.x;
+        //attributes[hIndex * count + 7] = plane.y;
+        //attributes[hIndex * count + 8] = plane.z;
     }
     return attributes;
+}
+
+inline auto pcaComputing(std::vector<std::vector<float>> signatures) {
+    
+    std::vector<std::vector<float>> pcaSignatures;
+    const auto featureCount = signatures.front().size();
+    const auto sampleCount = signatures.size();
+    cv::Mat data(featureCount, sampleCount, CV_32F);
+    for (size_t i = 0; i < featureCount; ++i) {
+        for (size_t j = 0; j < sampleCount; ++j) {
+            data.at<float>(i, j) = signatures[j][i];
+        }
+    }
+    const int finalDim = 5;
+    cv::PCA pca(data, cv::Mat(), 0, finalDim);
+    for (size_t i = 0; i < featureCount; ++i) {
+        cv::Mat sample(1, sampleCount, CV_32F);
+        for (size_t j = 0; j < sampleCount; ++j) {
+            sample.at<float>(0, j) = signatures[j][i];
+        }
+        auto pcaSample = pca.project(sample);
+        cv::normalize(pcaSample, pcaSample);
+        pcaSignatures.push_back(std::vector<float>(finalDim));
+        for (size_t k = 0; k < finalDim; ++k) {
+            pcaSignatures.back()[k] = pcaSample.at<float>(0, k);
+        }
+    }
+    return pcaSignatures;
 }

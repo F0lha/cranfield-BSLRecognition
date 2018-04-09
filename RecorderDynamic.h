@@ -12,7 +12,7 @@ class RecorderDynamic : public Leap::Listener
 {
     int frame_counter = 0;
     std::string gesture;
-    std::vector<Leap::Frame> Frames;
+    std::vector<std::vector<float>> signatures;
 
 public:
     RecorderDynamic();
@@ -22,7 +22,7 @@ public:
 
     void setGesture(std::string gesture);
 
-    void setAttribute(std::string number);
+    void writeSignatures(std::string number);
     
 };
 
