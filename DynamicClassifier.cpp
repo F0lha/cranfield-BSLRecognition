@@ -19,12 +19,18 @@ void DynamicClassifier::doSignatures(const Leap::Frame& frame) {
             mag = hand.palmVelocity().magnitude();
         }
     }
+	bool stop = false;
 
     if (mag > 50) {
         signatures.push_back(signatureDynamic(frame));
     }
-    
-    if(signatures.size()>100) {
+	else if(signatures.size() < 20){
+		signatures.clear();
+		return;
+	}
+	else stop = true;
+
+    if(stop || signatures.size()>200) {
         const auto pcaSignatures = pcaComputing(signatures);
         if (pcaSignatures.empty()) {
             return;
