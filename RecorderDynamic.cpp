@@ -34,13 +34,15 @@ void RecorderDynamic::writeSignatures(std::string number) {
         std::cout << "no signatures" << std::endl;
         return;
     }
-    const auto pcaSignatures = pcaComputing(signatures);
+    const auto filteredSignatures = medianFiltering(signatures,10);
+    //const auto pcaSignatures = pcaComputing(signatures);
     std::ofstream outputFile(gesture + "/"+ number + ".data");
     std::string framestring;
-    for (const auto& signature : pcaSignatures) {
+    for (const auto& signature : filteredSignatures) {
         for (const auto& v : signature) {
             framestring += std::to_string(v) + ",";
         }
+        //framestring += "\n";
     }
     outputFile << framestring;
     outputFile.close();

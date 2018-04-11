@@ -24,32 +24,33 @@ void DynamicClassifier::doSignatures(const Leap::Frame& frame) {
     if (mag > 50) {
         signatures.push_back(signatureDynamic(frame));
     }
-	else if(signatures.size() < 20){
-		signatures.clear();
-		return;
-	}
-	else stop = true;
-
-    if(stop || signatures.size()>200) {
-        const auto pcaSignatures = pcaComputing(signatures);
-        if (pcaSignatures.empty()) {
+    else {
+        if (signatures.size() < 50) {
+            signatures.clear();
             return;
         }
-
-        const auto nbCols = pcaSignatures[0].size();
-        if (nbCols < 5) {
-            return;
-        }
-        const auto nbRows = pcaSignatures.size();
-        cv::Mat predict(1, nbCols*nbRows, CV_32FC1);
-        for (int i = 0; i < nbRows; ++i) {
-            for (int j = 0; j < nbCols; ++j) {
-                predict.at<float>(0, i*nbCols + j) = pcaSignatures[i][j];
+        else {
+            const auto pcaSignatures = pcaComputing(signatures);
+            if (pcaSignatures.empty()) {
+                return;
             }
+
+            const auto nbCols = pcaSignatures[0].size();
+            if (nbCols < 5) {
+                return;
+            }
+
+            const auto nbRows = pcaSignatures.size();
+            cv::Mat predict(1, nbCols*nbRows, CV_32FC1);
+            for (int i = 0; i < nbRows; ++i) {
+                for (int j = 0; j < nbCols; ++j) {
+                    predict.at<float>(0, i*nbCols + j) = pcaSignatures[i][j];
+                }
+            }
+            auto labels = model->predict(predict);
+            std::cout << "Label: " << std::to_string(labels.front()) << std::endl;
+            signatures.clear();
         }
-        auto labels = model->predict(predict);
-        std::cout << "Label: " << std::to_string(labels.front()) << std::endl;
-        signatures.clear();
     }
 }
 

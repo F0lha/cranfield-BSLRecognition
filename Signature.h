@@ -166,3 +166,40 @@ inline auto pcaComputing(std::vector<std::vector<float>> signatures) {
     }
     return pcaSignatures;
 }
+
+    // Compute the median of a collection.
+template<class Cont>
+typename Cont::value_type
+median(Cont& values, typename Cont::value_type default_value = 0)
+{
+    const size_t count = values.size();
+    if( count > 1 ) {
+      const size_t lower = (count - 1) / 2;
+      const size_t upper = count / 2;
+      std::partial_sort(values.begin(), values.begin() + upper + 1, values.end());
+      return (values[lower] + values[upper]) / 2.0;
+    } else if( count == 1 )
+      return values[0];
+    else
+      return default_value;
+}
+
+ 
+// Filter our time Leap's signatures.
+using vvec = std::vector<std::vector<float>>;
+inline auto medianFiltering(vvec data, const size_t rows) {
+  const auto total_rows = data.size();
+  const auto wnd_size = total_rows / rows;
+  const auto cols       = data[0].size();
+  vvec filtered(rows, vvec::value_type(cols));
+  for(size_t c = 0; c < cols; ++c) {
+    size_t rr{};
+    for(size_t o = 0; o <= total_rows-wnd_size; o += wnd_size) {
+        std::vector<float> ft;
+      for(size_t r = o, size = o + wnd_size; r < size; ++r)
+        ft.push_back(data[r][c]);
+      filtered[rr++][c] = median(ft);
+    }
+  }
+   return filtered;
+}
