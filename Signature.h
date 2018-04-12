@@ -123,12 +123,9 @@ inline std::vector<float> signatureDynamic(Leap::Frame frame) {
     sf attributes(6, invalidValue);
     for (auto hand : frame.hands()) {
         auto hIndex = hand.isRight() ? 0 : 1;
-        auto direction = (hand.palmVelocity()) / (hand.palmVelocity().magnitude());
-        auto normal = hand.palmNormal();
-        auto plane = hand.direction();
-        attributes[hIndex * count + 0] = direction.x;
-        attributes[hIndex * count + 1] = direction.y;
-        attributes[hIndex * count + 2] = direction.z;
+        attributes[hIndex * count + 0] = hand.palmPosition().x;
+        attributes[hIndex * count + 1] = hand.palmPosition().y;
+        attributes[hIndex * count + 2] = hand.palmPosition().z;
         //attributes[hIndex * count + 3] = normal.x;
         //attributes[hIndex * count + 4] = normal.y;
         //attributes[hIndex * count + 5] = normal.z;
@@ -138,6 +135,36 @@ inline std::vector<float> signatureDynamic(Leap::Frame frame) {
     }
     return attributes;
 }
+
+//inline std::vector<float> signatureDynamic(const Leap::Frame& frame) {
+//    using sf = std::vector<float>;
+//    sf attributes;
+//    if (frame.hands().count() != 2){
+//        return attributes;
+//    }
+//
+//    const auto& hands = frame.hands();
+//    if (hands[0].fingers().count() != 5 || hands[1].fingers().count() != 5) {
+//        return attributes;
+//    }
+//
+//    const auto& leftHand = hands[0].isRight() ? hands[1] : hands[0];
+//    const auto& rightHand = hands[0].isRight() ? hands[0] : hands[1];
+//
+//    const auto& leftVelocity = leftHand.palmVelocity();
+//    const auto& rightVelocity = rightHand.palmVelocity();
+//    const auto  diffVelocity = leftVelocity - rightVelocity;
+//    attributes.push_back(diffVelocity.x);
+//    attributes.push_back(diffVelocity.y);
+//    attributes.push_back(diffVelocity.z);
+//
+//    const auto& leftNormal = leftHand.palmNormal();
+//    const auto& rightNormal = rightHand.palmNormal();
+//    const auto angle = leftNormal.angleTo(rightNormal);
+//    attributes.push_back(angle);
+//
+//    return attributes;
+//}
 
 inline auto pcaComputing(std::vector<std::vector<float>> signatures) {
     
@@ -193,13 +220,54 @@ inline auto medianFiltering(vvec data, const size_t rows) {
   const auto cols       = data[0].size();
   vvec filtered(rows, vvec::value_type(cols));
   for(size_t c = 0; c < cols; ++c) {
-    size_t rr{};
-    for(size_t o = 0; o <= total_rows-wnd_size; o += wnd_size) {
-        std::vector<float> ft;
-      for(size_t r = o, size = o + wnd_size; r < size; ++r)
-        ft.push_back(data[r][c]);
-      filtered[rr++][c] = median(ft);
+      size_t rr{};
+    for(size_t o = 0; o < total_rows; o += wnd_size) {
+        if (o + wnd_size > total_rows)
+            break;
+        std::vector<float> ft{};
+        for(size_t r = o, size = o + wnd_size; r < size; ++r)
+            ft.push_back(data[r][c]);
+        if (rr >= filtered.size()) {
+            return filtered;
+        }
+        filtered[rr++][c] = median(ft);
     }
   }
    return filtered;
+}   
+
+inline float min(float x, float y, float z) {
+    if ((x <= y) && (x <= z)) return x;
+    if ((y <= x) && (y <= z)) return y;
+    if ((z <= x) && (z <= y)) return z;
+}
+
+inline float DTW (std::vector<float> v, std::vector<float> w) {
+    int cost;
+    vvec MG;
+    size_t n = v.size() - 1;
+    size_t m = w.size() - 1;
+
+    for (int i = 1; i <= w.size(); i++) {
+        MG[0][i] = std::numeric_limits<float>::infinity();
+    }
+    for (int i = 1; i <= v.size(); i++) {
+        MG[i][0] = std::numeric_limits<float>::infinity();
+    }
+    MG[0][0] = 0;
+
+    for (int i = 1; i <= v.size(); i++) {
+        for (int j = 1; j <= w.size(); j++) {
+            //	cost = abs( v[i] - w[j] ) * abs( v[i] - w[j] );
+            if (v[i - 1] == w[j - 1]) {
+                cost = 0;
+                //	cout << v[i - 1] << " and " << w[j - 1] << endl;
+            }
+            else {
+                cost = 1;
+            }
+            MG[i][j] = cost + min(MG[i - 1][j], MG[i][j - 1], MG[i - 1][j - 1]);
+        }
+    }
+    return MG[n][m];
 }

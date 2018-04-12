@@ -21,7 +21,7 @@ void DynamicClassifier::doSignatures(const Leap::Frame& frame) {
     }
 	bool stop = false;
 
-    if (mag > 50) {
+    if (mag > 50 && frame.hands().count() == 2) {
         signatures.push_back(signatureDynamic(frame));
     }
     else {
@@ -30,7 +30,7 @@ void DynamicClassifier::doSignatures(const Leap::Frame& frame) {
             return;
         }
         else {
-            const auto pcaSignatures = pcaComputing(signatures);
+            auto pcaSignatures = medianFiltering(signatures,10);
             if (pcaSignatures.empty()) {
                 return;
             }
