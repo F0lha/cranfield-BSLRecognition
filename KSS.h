@@ -29,16 +29,25 @@ public:
         }
     }
     double accuracy() const {
-        return double(tp_ + tn_) / double(tp_ + tn_ + fp_ + fn_);
+		if ((tp_ + tn_ + fp_ + fn_) != 0)
+			return double(tp_ + tn_) / double(tp_ + tn_ + fp_ + fn_);
+		else
+			return 0;
     }
     double precision() const {
+		if ((tp_ + fp_) != 0)
         return double(tp_) / double(tp_ + fp_);
+		else return 0;
     }
     double TNR() const {
+			if ((tn_ + fp_) != 0)
         return double(tn_) / double(tn_ + fp_);
+		else return 0;
     }
     double TPR() const {
+		if((tp_ + fn_) != 0)
         return double(tp_) / double(tp_ + fn_);
+		else return 0;
     }
 };
 
