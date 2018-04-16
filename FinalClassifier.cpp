@@ -1,18 +1,20 @@
-#include "DynamicClassifier.h"
+#include "FinalClassifier.h"
 #include  "Signature.h"
 
 
-DynamicClassifier::DynamicClassifier(Model* modeldynamic)
+FinalClassifier::FinalClassifier(Model* modeldynamic, Model* modelstatic)
 {
+
     model = modeldynamic;
+    model2 = modelstatic;
 }
 
 
-DynamicClassifier::~DynamicClassifier()
+FinalClassifier::~FinalClassifier()
 {
 }
 
-void DynamicClassifier::onFrame(const Leap::Controller& controller) {
+void FinalClassifier::onFrame(const Leap::Controller& controller) {
     const Leap::Frame frame = controller.frame();
     auto mag = 0.0f;
     for (const auto hand : frame.hands()) {
@@ -20,7 +22,7 @@ void DynamicClassifier::onFrame(const Leap::Controller& controller) {
             mag = hand.palmVelocity().magnitude();
         }
     }
-	bool stop = false;
+    bool stop = false;
 
     if (mag > 50 && frame.hands().count() == 2) {
         signatures.push_back(signatureDynamic(frame));
@@ -28,9 +30,32 @@ void DynamicClassifier::onFrame(const Leap::Controller& controller) {
     else {
         if (signatures.size() < 50) {
             signatures.clear();
+            auto attributes = signatureStatic(frame.hands());
+            cv::Mat predict = cv::Mat(1, attributes.size(), CV_32FC1, attributes.data());
+            auto labels = model2->predict(predict);
+            if (labels.front() == 0) {
+                return;
+            }
+            if (labels.front() == 1) {
+                std::cout << "sign: B letter" << std::endl;
+                return;
+            }
+
+            if (labels.front() == 2) {
+                std::cout << "sign: c letter" << std::endl;
+                return;
+            }
+            if (labels.front() == 3) {
+                std::cout << "sign: ghost" << std::endl;
+                return;
+            }
+            if (labels.front() == 4) {
+                std::cout << "sign: house" << std::endl;
+                return;
+            }
         }
         else {
-            auto pcaSignatures = medianFiltering(signatures,10);
+            auto pcaSignatures = medianFiltering(signatures, 10);
             if (pcaSignatures.empty()) {
                 return;
             }
